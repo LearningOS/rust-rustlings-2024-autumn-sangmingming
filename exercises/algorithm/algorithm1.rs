@@ -35,7 +35,8 @@ impl<T> Default for LinkedList<T> {
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T> LinkedList<T>
+{
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -70,13 +71,76 @@ impl<T> LinkedList<T> {
         }
     }
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+    where T: std::cmp::PartialOrd + Copy,
 	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+
+		let mut list = LinkedList::<T> {length: list_a.length + list_b.length, start: None, end: None};
+        let mut current = None;
+        let mut a_current = list_a.start;
+        let mut b_current = list_b.start;
+        while a_current.is_some() && b_current.is_some() {
+            let mut a: NonNull<Node<T>> = a_current.unwrap();
+            let mut b = b_current.unwrap();
+            let vala = unsafe {a.as_ref()}.val;
+            let vab = unsafe {
+                b.as_ref()
+            }.val;
+            let node: Option<NonNull<Node<T>>> = if vala < vab {
+                let mut temp = a_current;
+                a_current = unsafe {a.as_ref()}.next;
+                temp
+            } else {
+                let mut temp = b_current;
+                b_current = unsafe {
+                    b.as_ref()
+                }.next;
+                temp
+            };
+            match current {
+                None  => {
+                    current = node;
+                    list.start = current;
+                },
+                Some(mut c) => {
+                    unsafe { c.as_mut().next = node; }
+                    current = node;
+                }
+            }
         }
+        while let Some(a) = a_current {
+            let mut temp1 = a_current;
+            a_current = unsafe {
+                a.as_ref()
+            }.next;
+            match current {
+                    None  => {
+                        current = temp1;
+                        list.start = current;
+                    },
+                    Some(mut c) => {
+                        unsafe { c.as_mut().next = temp1; }
+                        current = temp1;
+                    }
+            }
+        }
+        while let Some(mut b) = b_current {
+            let mut temp2 = b_current;
+            b_current = unsafe {
+                b.as_ref()
+            }.next;
+            match current {
+                    None  => {
+                        current = temp2;
+                        list.start = current;
+                    },
+                    Some(mut c) => {
+                        unsafe { c.as_mut().next = temp2; }
+                        
+                        current = temp2;
+                    }
+            }
+        }
+		list
 	}
 }
 
@@ -143,7 +207,7 @@ mod tests {
 			list_b.add(vec_b[i]);
 		}
 		println!("list a {} list b {}", list_a,list_b);
-		let mut list_c = LinkedList::<i32>::merge(list_a,list_b);
+		let mut list_c: LinkedList<i32> = LinkedList::<i32>::merge(list_a,list_b);
 		println!("merged List is {}", list_c);
 		for i in 0..target_vec.len(){
 			assert_eq!(target_vec[i],*list_c.get(i as i32).unwrap());
