@@ -3,7 +3,6 @@
 	This problem requires you to implement a basic interface for a binary tree
 */
 
-//I AM NOT DONE
 use std::cmp::Ordering;
 use std::fmt::Debug;
 
@@ -21,14 +20,14 @@ where
 #[derive(Debug)]
 struct BinarySearchTree<T>
 where
-    T: Ord,
+    T: Ord + PartialOrd,
 {
     root: Option<Box<TreeNode<T>>>,
 }
 
 impl<T> TreeNode<T>
 where
-    T: Ord,
+    T: Ord + PartialOrd,
 {
     fn new(value: T) -> Self {
         TreeNode {
@@ -41,7 +40,7 @@ where
 
 impl<T> BinarySearchTree<T>
 where
-    T: Ord,
+    T: Ord + PartialOrd + PartialEq + Copy,
 {
 
     fn new() -> Self {
@@ -50,23 +49,54 @@ where
 
     // Insert a value into the BST
     fn insert(&mut self, value: T) {
-        //TODO
+        if let Some(root) = &mut self.root {
+            root.insert(value);
+        } else {
+            self.root = Some(Box::new(TreeNode::new(value)));
+        }
+        
     }
 
     // Search for a value in the BST
     fn search(&self, value: T) -> bool {
-        //TODO
-        true
+        return self.dfs(&self.root, value)
+    }
+
+    fn dfs(&self, root: &Option<Box<TreeNode<T>>>, value: T) -> bool {
+        match root {
+            Some(content) => {
+                if content.value == value {
+                    true
+                } else if content.value > value {
+                    self.dfs(&content.left, value)
+                } else {
+                    self.dfs(&content.right, value)
+                }
+            },
+            None => false,
+        }
     }
 }
 
 impl<T> TreeNode<T>
 where
-    T: Ord,
+    T: Ord + PartialOrd + PartialEq + Copy,
 {
     // Insert a node into the tree
     fn insert(&mut self, value: T) {
-        //TODO
+        if self.value == value {
+            return;
+        } else if self.value > value {
+            match &mut self.left {
+                Some(node) => node.insert(value),
+                None => {self.left = Some(Box::from(TreeNode::new(value)));}
+            }
+        } else {
+            match &mut self.right {
+                Some(ri) => ri.insert(value),
+                None => {self.right = Some(Box::from(TreeNode::new(value)));}
+            }
+        }
     }
 }
 
@@ -89,7 +119,7 @@ mod tests {
         bst.insert(2);
         bst.insert(4);
 
-        
+
         assert_eq!(bst.search(5), true);
         assert_eq!(bst.search(3), true);
         assert_eq!(bst.search(7), true);
